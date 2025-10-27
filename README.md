@@ -1,20 +1,19 @@
-# Student-system
-    def delete_student(self):
-        """Delete student"""
-        print("\n----- Delete Student -----")
-        if not self.students:
-            print("No student information available!")
-            return
+# llm_interface.py
 
-        sid = input("Enter student ID to delete: ").strip()
-        student = self.students.get(sid)
-        if not student:
-            print(f"No student found with ID {sid}!")
-            return
+from abc import ABC, abstractmethod
+from typing import Dict, Any
 
-        confirm = input(f"Are you sure to delete student {student.name} (ID: {sid})? (y/n): ").strip().lower()
-        if confirm == "y":
-            del self.students[sid]
-            print(f"Student {student.name} deleted successfully!")
-        else:
-            print("Deletion canceled")
+class IQueryAgent(ABC):
+    """
+    Dependency Inversion Principle (DIP): Defines the abstraction for the Natural Language Query Agent.
+    StudentManager will depend on this interface.
+    """
+
+    @abstractmethod
+    def parse_query(self, natural_language_text: str) -> Dict[str, Any]:
+        """
+        Parses natural language text into a structured query dictionary
+        (e.g., {'age_min': 20, 'major': 'CS'}).
+        Should raise StudentError if parsing fails or input is incomprehensible.
+        """
+        pass
