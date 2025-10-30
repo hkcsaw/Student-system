@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System - Web UI</title>
+    <style>
+        /* Global Styles and Background Update - Using Hungarian Scenery */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* Path updated to /static/, ensure image is in the static folder */
+            background-image: url('/static/460779ab335d4818b1f60e198ab409ae~tplv-a9rns2rl98-pc_smart_face_crop-v1_512_384.jpg');
+            background-size: cover; /* Ensure background image covers the entire viewport */
+            background-attachment: fixed; /* Fixed background image, image does not move when content scrolls */
+            background-position: center center; /* Center the image */
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            color: #333; /* Ensure text is visible on the background */
+        }
+
+        /* Top Banner Style Modification (UPDATED FOR 2 ROWS) */
+        .header-banner {
+            padding: 15px 30px 10px 30px; /* Adjust padding (bottom is smaller) */
+            margin-bottom: 20px;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* First Row: Group Name vs Instructor Name */
+        .banner-row-1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px; /* Separator for rows */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .banner-row-1 h1 {
+            font-size: 2.5em;
+            margin: 0;
+        }
+
+        .banner-row-1 p {
+            font-size: 1.5em;
+            margin: 0;
+            color: #ffc107; /* Highlight the instructor's name */
+        }
+
+        /* Second Row: Music/Saying */
+        .banner-row-2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start; /* Align to the top of the row */
+            padding-top: 10px;
+        }
+
+        /* Left Side: Vertically Stacked Music Controls */
+        .banner-left-music {
+            display: flex;
+            flex-direction: column; /* Stack items vertically */
+            gap: 10px; /* Space between music blocks */
+        }
+
+        .music-block {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .music-block p {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 0;
+            white-space: nowrap; /* Prevent wrapping of text */
+        }
+
+        /* Right Side: Instructor Message */
+        .banner-right-message {
+            max-width: 50%; /* Control width of the message block */
+            text-align: right;
+            line-height: 1.4;
+            padding-left: 20px;
+        }
+        .banner-right-message p {
+            font-size: 1.1em;
+            margin: 0;
+            color: #007bff; /* Color for the main message */
+            font-style: italic;
+        }
+
+
+        /* Main Container Style */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.95); /* Semi-transparent white background for content */
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Status/Message Popup Style */
+        #message-box {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            /* NEW: Animation Properties */
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            pointer-events: none;
+            transform: scale(0.9); /* Start small */
+        }
+
+        /* NEW: Active state for message box */
+        #message-box.show {
+            opacity: 1;
+            transform: scale(1); /* End large */
+        }
+
+        /* Student List Style */
+        #student-list-container {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        #student-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        /* Table Header Style */
+        #student-list th {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 3px solid #dee2e6;
+        }
+
+        /* Table Row Hover Effect */
+        #student-list tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        #student-list tbody tr:hover {
+            background-color: #e2e6ea;
+        }
+
+        /* Table Cell Style */
+        #student-list td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+
+        /* Button Group Style (UPDATED FOR ANIMATION) */
+        .button-group button, .button-group input[type="submit"], .music-block button {
+            padding: 8px 15px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            /* NEW: Animation Base */
+            transition: all 0.2s ease-in-out; /* Transition for all changes */
+            position: relative; /* Needed for transform/shadow to work correctly */
+            transform: translateY(0); /* Initial state */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle initial shadow */
+        }
+
+        /* NEW: Button Hover Animation (Lift effect) */
+        .button-group button:hover, .button-group input[type="submit"]:hover, .music-block button:hover {
+            transform: translateY(-2px); /* Lift effect */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25); /* More pronounced shadow */
+        }
+
+        /* NEW: Button Active Animation (Press-down effect) */
+        .button-group button:active, .button-group input[type="submit"]:active, .music-block button:active {
+            transform: translateY(1px); /* Press-down effect */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* Flat shadow */
+        }
+
+        /* Style for the music play buttons within the header */
+        .music-block button {
+            padding: 5px 10px; /* Smaller buttons in the header */
+            font-size: 0.9em;
+            margin-right: 0;
+        }
+
+
+        .btn-primary { background-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #1e7e34; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #bd2130; }
+        .btn-info { background-color: #17a2b8; }
+        .btn-info:hover { background-color: #117a8b; }
+        .btn-warning { background-color: #ffc107; color: #333;}
+        .btn-warning:hover { background-color: #e0a800; }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        /* Music Control Bar Style (Manual Save) */
+        .music-control-bar {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 5px;
+            display: flex;
+            justify-content: flex-end; /* Only keep the save button */
+            align-items: center;
+        }
+
+
+        /* Success Message Style */
+        .success {
+            background-color: #28a745;
+        }
+
+        /* Error Message Style */
+        .error {
+            background-color: #dc3545;
+        }
+
+        /* Warning Message Style */
+        .warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <div class="banner-row-1">
+            <div class="banner-left">
+                <h1><span style="color: #ffc107;">Happy</span> <span style="color: #007bff;">Working</span>!</h1>
+            </div>
+
+            <div class="banner-right">
+                <p>Instructor: TB</p>
+            </div>
+        </div>
+
+        <div class="banner-row-2">
+            <div class="banner-left-music">
+
+                <div class="music-block">
+                    <p>Our Favorite Music: (Cai Xukun - Deadman)</p>
+                    <button type="button" class="btn-warning" id="toggleDeadmanBtn" data-song-id="deadman">Play 🔇</button>
+                </div>
+
+                <div class="music-block">
+                    <p>We Think You Might Like: (Hungarian Dance No. 5)</p>
+                    <button type="button" class="btn-warning" id="toggleHungarianBtn" data-song-id="hungarian">Play 🔇</button>
+                </div>
+            </div>
+
+            <div class="banner-right-message">
+                <p>We think Software Engineering is very interesting, thank you Teacher TB for the excellent instruction!</p>
+            </div>
+        </div>
+
+        <audio id="mainAudioPlayer" loop preload="auto" style="display: none;"></audio>
+    </div> <div id="message-box"></div>
+
+    <div class="container">
+        <h2>Student Management System - Web UI</h2>
+
+        <div id="add-modify-section">
+            <h3>Add/Modify Student Information</h3>
+            <form id="student-form">
+                <input type="hidden" id="form-mode" value="add"> <div class="form-group">
+                    <label for="sid">Student ID (Required/Unique):</label>
+                    <input type="text" id="sid" required pattern="[A-Za-z0-9]+" title="Alphanumeric only, e.g. S101">
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age:</label>
+                    <input type="number" id="age" required min="1" max="150">
+                </div>
+
+                <div class="form-group">
+                    <label for="gender">Gender:</label>
+                    <select id="gender" required>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="major">Major:</label>
+                    <input type="text" id="major" required>
+                </div>
+
+                <div class="button-group">
+                    <input type="submit" class="btn-primary" value="Submit" id="submit-btn">
+                    <button type="button" class="btn-info" id="reset-btn">Reset Form</button>
+                </div>
+            </form>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <div id="llm-query-section">
+            <h3>LLM Natural Language Query</h3>
+            <form id="llm-query-form">
+                <div class="form-group">
+                    <label for="query-text">Enter Query (e.g., 'all females over 20'):</label>
+                    <input type="text" id="query-text" placeholder="e.g., CS major less than 18" required>
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn-success">Search</button>
+                </div>
+            </form>
+
+            <div id="query-results-container" style="margin-top: 20px; display: none;">
+                <h4>Query Results</h4>
+                <p id="parsed-params-output">Parsed Parameters: </p>
+                <div id="llm-student-list-container">
+                    </div>
+                <p id="query-error-message" style="color: red; display: none;">Query failed. Check input or console for errors.</p>
+                <p id="query-no-match-message" style="color: orange; display: none;">Search successful, but no students matched the criteria.</p>
+            </div>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <div id="list-section">
+            <h3>Student List</h3>
+            <div id="student-list-container">
+                <table id="student-list">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Major</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="music-control-bar">
+            <div class="button-group">
+                <button type="button" class="btn-danger" id="saveDataBtn">Manually Save Data to Disk</button>
+            </div>
+        </div>
+    </div> <script>
+        const API_BASE = ""; // Relative path to the current host
+
+        // --- Message Handling (UPDATED FOR ANIMATION) ---
+        function showMessage(message, type = 'success') {
+            const msgBox = document.getElementById('message-box');
+            msgBox.textContent = message;
+            msgBox.className = ''; // Clear existing classes
+            msgBox.classList.add(type);
+            msgBox.classList.add('show'); // NEW: Add 'show' class to trigger fade-in/scale-up
+
+            setTimeout(() => {
+                msgBox.classList.remove('show'); // NEW: Remove 'show' class to trigger fade-out/scale-down
+            }, 3000);
+        }
+
+        // --- Core: Load and Render Student List ---
+        async function loadStudents() {
+            const listBody = document.querySelector('#student-list tbody');
+            listBody.innerHTML = '<tr><td colspan="6">Loading student list...</td></tr>';
+
+            try {
+                const response = await fetch(`${API_BASE}/students`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const students = await response.json();
+
+                listBody.innerHTML = ''; // Clear loading message
+
+                if (students.length === 0) {
+                    listBody.innerHTML = '<tr><td colspan="6">No student data available.</td></tr>';
+                    return;
+                }
+
+                students.forEach(student => {
+                    const row = listBody.insertRow();
+                    row.insertCell().textContent = student.sid;
+                    row.insertCell().textContent = student.name;
+                    row.insertCell().textContent = student.age;
+                    row.insertCell().textContent = student.gender;
+                    row.insertCell().textContent = student.major;
+
+                    // Action buttons
+                    const actionsCell = row.insertCell();
+
+                    // Modify button
+                    const modifyBtn = document.createElement('button');
+                    modifyBtn.textContent = 'Modify';
+                    modifyBtn.className = 'btn-warning';
+                    modifyBtn.onclick = () => loadStudentForModify(student);
+
+                    // Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.className = 'btn-danger';
+                    deleteBtn.onclick = () => deleteStudent(student.sid);
+
+                    actionsCell.appendChild(modifyBtn);
+                    actionsCell.appendChild(deleteBtn);
+                });
+
+            } catch (error) {
+                console.error("Failed to load student data:", error);
+                listBody.innerHTML = '<tr><td colspan="6" style="color: red;">Failed to load student data.</td></tr>';
+                showMessage(`Failed to load student data. Error: ${error.message}`, 'error');
+            }
+        }
+
+        // --- Form Reset and Modify Load Logic ---
+
+        function resetForm() {
+            document.getElementById('student-form').reset();
+            document.getElementById('form-mode').value = 'add';
+            document.getElementById('sid').readOnly = false;
+            document.getElementById('sid').placeholder = '';
+            document.getElementById('submit-btn').value = 'Submit';
+        }
+
+        document.getElementById('reset-btn').addEventListener('click', resetForm);
+
+        function loadStudentForModify(student) {
+            // 1. Change form mode
+            document.getElementById('form-mode').value = 'modify';
+            document.getElementById('submit-btn').value = 'Modify';
+
+            // 2. Populate form fields
+            document.getElementById('sid').value = student.sid;
+            document.getElementById('name').value = student.name;
+            document.getElementById('age').value = student.age;
+            document.getElementById('gender').value = student.gender;
+            document.getElementById('major').value = student.major;
+
+            // 3. Disable SID field for modification
+            document.getElementById('sid').readOnly = true;
+            document.getElementById('sid').placeholder = 'Alphanumeric only, used for Modify/Delete';
+
+            // 4. Scroll to form
+            document.getElementById('add-modify-section').scrollIntoView({ behavior: 'smooth' });
+            showMessage(`Modifying Student: ${student.sid} - ${student.name}`, 'warning');
+        }
+
+        // --- Core: Add/Modify Student Submission ---
+        document.getElementById('student-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const sid = document.getElementById('sid').value.trim();
+            const name = document.getElementById('name').value.trim();
+            const age = parseInt(document.getElementById('age').value);
+            const gender = document.getElementById('gender').value;
+            const major = document.getElementById('major').value.trim();
+            const mode = document.getElementById('form-mode').value;
+
+            // Simple client-side validation for non-optional fields
+            if (!sid || !name || !age || !gender || !major) {
+                showMessage('Required fields cannot be empty.', 'error');
+                return;
+            }
+
+            let studentData = { sid, name, age, gender, major };
+            let url = `${API_BASE}/students`;
+            let method = 'POST';
+
+            if (mode === 'modify') {
+                url = `${API_BASE}/students/${sid}`;
+                method = 'PUT';
+                // Only send fields that were potentially changed for a PUT request
+                const updateData = {
+                    name: studentData.name,
+                    age: studentData.age,
+                    gender: studentData.gender,
+                    major: studentData.major
+                };
+                // Only send updateData for PUT
+                studentData = updateData;
+            } else {
+                // For POST, we send the full studentData including the provided SID (optional on backend)
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(studentData),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Student Added/Modified Successfully!', 'success');
+                    resetForm();
+                    loadStudents(); // Reload list after success
+                } else {
+                    // Centralized error handling for business logic exceptions
+                    let errorMessage = result.detail || 'Validation failed.';
+
+                    // Mapping common backend errors to user-friendly messages
+                    if (errorMessage.includes('Student ID') && errorMessage.includes('already exists')) {
+                        errorMessage = `Student ID ${sid} already exists.`;
+                    } else if (errorMessage.includes('ID must be non-empty alphanumeric')) {
+                        errorMessage = 'ID must be non-empty alphanumeric.';
+                    } else if (errorMessage.includes('Age must be an integer between 1 and 150')) {
+                        errorMessage = 'Age must be an integer between 1 and 150.';
+                    } else if (errorMessage.includes("Gender must be 'Male' or 'Female'")) {
+                        errorMessage = "Gender must be 'Male' or 'Female'.";
+                    } else if (errorMessage.includes('Name cannot be empty') || errorMessage.includes('Major cannot be empty')) {
+                        errorMessage = 'Name/Major cannot be empty.';
+                    }
+
+                    showMessage(errorMessage, 'error');
+                    console.error("API Error:", result);
+                }
+            } catch (error) {
+                console.error("Network or parsing error:", error);
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        });
+
+        // --- Core: Delete Student ---
+        async function deleteStudent(sid) {
+            if (!confirm(`Confirm deletion of Student ID: ${sid}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/students/${sid}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.status === 204) {
+                    showMessage('Deletion Successful!', 'success');
+                    loadStudents(); // Reload list
+                } else {
+                    const result = await response.json();
+                    throw new Error(result.detail || 'Deletion Failed: Unknown error');
+                }
+            } catch (error) {
+                console.error(`Deletion Failed: ${error}`);
+                showMessage(`Deletion Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // --- Core: LLM Query Submission ---
+        document.getElementById('llm-query-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const queryText = document.getElementById('query-text').value.trim();
+            const resultsContainer = document.getElementById('query-results-container');
+            const listContainer = document.getElementById('llm-student-list-container');
+            const errorMsg = document.getElementById('query-error-message');
+            const noMatchMsg = document.getElementById('query-no-match-message');
+            const parsedParamsOutput = document.getElementById('parsed-params-output');
+
+            listContainer.innerHTML = 'Loading query results...';
+            resultsContainer.style.display = 'block';
+            errorMsg.style.display = 'none';
+            noMatchMsg.style.display = 'none';
+
+            try {
+                const url = `${API_BASE}/query_by_llm?query_text=${encodeURIComponent(queryText)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (response.ok) {
+                    const students = result.students;
+                    const queryParams = result.query_params;
+
+                    // 1. Display parsed parameters
+                    parsedParamsOutput.textContent = `Parsed Parameters: ${JSON.stringify(queryParams)}`;
+
+                    // 2. Display results
+                    if (students.length === 0) {
+                        listContainer.innerHTML = '';
+                        noMatchMsg.style.display = 'block';
+                        showMessage('Search successful, but no students matched the criteria.', 'warning');
+                        return;
+                    }
+
+                    // Generate a new table for results
+                    const tableHtml = `
+                        <table id="llm-results-table" class="student-list" style="margin-top: 10px;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Gender</th>
+                                    <th>Major</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${students.map(s => `
+                                    <tr>
+                                        <td>${s.sid}</td>
+                                        <td>${s.name}</td>
+                                        <td>${s.age}</td>
+                                        <td>${s.gender}</td>
+                                        <td>${s.major}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                    listContainer.innerHTML = tableHtml;
+                    showMessage(`Search successful! Found ${students.length} students.`, 'success');
+
+                } else {
+                    // Handle API error (e.g., LLM cannot parse the query)
+                    listContainer.innerHTML = '';
+                    errorMsg.textContent = result.detail || 'Query failed. Check input or console for errors.';
+                    errorMsg.style.display = 'block';
+                    showMessage(errorMsg.textContent, 'error');
+                    console.error("LLM Query API Error:", result);
+                }
+            } catch (error) {
+                console.error("LLM Query Network/Parsing Error:", error);
+                errorMsg.textContent = `Query failed. Check input or console for errors. Error: ${error.message}`;
+                errorMsg.style.display = 'block';
+                listContainer.innerHTML = '';
+                showMessage('Query failed. Check input or console for errors.', 'error');
+            }
+        });
+
+        // --- Core: Manual Save ---
+        document.getElementById('saveDataBtn').addEventListener('click', async () => {
+            if (!confirm('Are you sure you want to manually save all data to disk?')) {
+                return;
+            }
+
+            showMessage('Saving data...', 'warning');
+
+            try {
+                const response = await fetch(`${API_BASE}/save_data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage(result.message, 'success');
+                } else {
+                    throw new Error(result.detail || 'Unknown save error');
+                }
+            } catch (error) {
+                console.error("Failed to save data:", error);
+                showMessage(`Failed to save data: ${error.message}`, 'error');
+            }
+        });
+
+        // --- Core Feature: Music Playback Control (UPDATED FOR TWO BUTTONS) ---
+        const audioPlayer = document.getElementById('mainAudioPlayer');
+        const toggleDeadmanBtn = document.getElementById('toggleDeadmanBtn');
+        const toggleHungarianBtn = document.getElementById('toggleHungarianBtn');
+
+        // Track list (Uses the actual file path from static/)
+        const tracks = {
+            'deadman': { name: 'Cai Xukun - Deadman', file: '/static/蔡徐坤 - Deadman.flac', button: toggleDeadmanBtn },
+            'hungarian': { name: 'Various Artists - Hungarian Dance No. 5', file: '/static/Various Artists - 匈牙利舞曲第五号.flac', button: toggleHungarianBtn }
+        };
+        let currentPlayingSongId = null;
+
+        // Function to control music playback
+        function toggleMusic(songId) {
+            const track = tracks[songId];
+
+            if (!track) return;
+
+            // 1. If a different song is playing, stop it first.
+            if (currentPlayingSongId && currentPlayingSongId !== songId) {
+                const previousTrack = tracks[currentPlayingSongId];
+                audioPlayer.pause();
+                previousTrack.button.textContent = 'Play 🔇';
+                currentPlayingSongId = null; // Clear state before setting new one
+            }
+
+            // 2. If the desired song is currently loaded and paused/not playing:
+            if (currentPlayingSongId === songId && !audioPlayer.paused) {
+                // Pause the current song
+                audioPlayer.pause();
+                track.button.textContent = 'Play 🔇';
+                currentPlayingSongId = null;
+                showMessage(`Music Paused: ${track.name}`, 'error');
+            } else {
+                // Start or switch to a new song
+
+                // a. Set the new source if it's a new song or the player is empty/stopped
+                if (audioPlayer.src.indexOf(track.file) === -1) {
+                    audioPlayer.src = track.file;
+                    audioPlayer.load();
+                }
+
+                // b. Attempt to play
+                audioPlayer.play().then(() => {
+                    // Success: Update UI
+                    currentPlayingSongId = songId;
+                    track.button.textContent = 'Pause 🎶';
+                    showMessage(`Music Playing: ${track.name}`, 'success');
+
+                    // Reset the other button if it wasn't the target (only necessary if logic flow is complex, but good for safety)
+                    for (const id in tracks) {
+                        if (id !== songId) {
+                            tracks[id].button.textContent = 'Play 🔇';
+                        }
+                    }
+
+                }).catch(error => {
+                    // Failure: Autoplay blocked
+                    console.warn(`Autoplay blocked or failed for ${track.name}.`, error);
+                    track.button.textContent = 'Play 🔇';
+                    currentPlayingSongId = null;
+                    showMessage(`Autoplay blocked for ${track.name}. Please click Play.`, 'warning');
+                });
+            }
+        }
+
+        // Add event listeners to both buttons
+        toggleDeadmanBtn.addEventListener('click', () => toggleMusic('deadman'));
+        toggleHungarianBtn.addEventListener('click', () => toggleMusic('hungarian'));
+
+
+        // Initialization: Load student data after page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudents();
+            // Start with the Deadman track loaded (optional)
+            // Note: Autoplay will still be blocked until the user interacts with the page (clicks a button).
+        });
+    </script>
+</body>
+</html>
